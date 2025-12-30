@@ -1,6 +1,7 @@
 # SIREN 图像压缩
 
 使用 SIREN (Sinusoidal Representation Networks) 神经网络进行图像压缩和重建的项目。
+目前恢复需要较长时间，进一步优化中。
 
 ## 功能
 
@@ -58,4 +59,5 @@ python main.py
 ├── ckpt/             # 模型检查点目录
 └── requirements.txt  # 依赖包
 ```
+
 
