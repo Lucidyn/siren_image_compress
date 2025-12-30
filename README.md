@@ -1,7 +1,6 @@
 # SIREN 图像压缩
 
 使用 SIREN (Sinusoidal Representation Networks) 神经网络进行图像压缩和重建的项目。
-目前恢复需要较长时间，进一步优化中。
 
 ## 功能
 
@@ -30,6 +29,7 @@ pip install -r requirements.txt
 - `HIDDEN_DIM`: 隐藏层维度（控制压缩率和质量，建议 256-512）
 - `LAYERS`: 网络层数（建议 4-6 层）
 - `LR`: 学习率（默认 1e-4）
+- `RECONSTRUCT_FROM_CKPT`: 是否从保存的 pth 文件重建（`True`=从文件加载重建，`False`=训练后从内存重建）
 
 注意：`main.py` 中也可以直接修改 `HIDDEN_DIM`、`LAYERS`、`BATCH_SIZE` 和 `OVERLAP` 参数。
 
@@ -46,6 +46,10 @@ python main.py
 
 训练好的模型会保存在 `ckpt/` 目录下，重建结果会保存为 `ckpt/reconstruction.png`。
 
+**重建模式说明：**
+- `RECONSTRUCT_FROM_CKPT = False`（默认）：训练完成后直接从内存中的模型重建，速度更快
+- `RECONSTRUCT_FROM_CKPT = True`：从保存的 `.pth` 文件加载模型重建，适合只重建不训练的场景
+
 ## 项目结构
 
 ```
@@ -59,5 +63,4 @@ python main.py
 ├── ckpt/             # 模型检查点目录
 └── requirements.txt  # 依赖包
 ```
-
 
