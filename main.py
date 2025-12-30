@@ -74,9 +74,60 @@ for idx, (y, x, tile) in enumerate(tiles):
 
     model = train_tile(tile, coords, epochs_tile)
     tile_models.append((model, (y, x), (h, w)))
+    
+    # 保存模型
+    torch.save(
+        {
+            "state": model.state_dict(),
+            "shape": (h, w),
+            "pos": (y, x)
+        },
+        f"{CKPT_DIR}/tile_{idx}.pth"
+    )
+
+# 从 pth 文件加载模型并重建
+def reconstruct_from_checkpoints(ckpt_dir, img_shape):
+    """从保存的 pth 文件加载模型并重建图像"""
+    import glob
+    h_total, w_total, _ = img_shape
+    recon = np.zeros(img_shape, dtype=np.float32)
+    weight = np.zeros(img_shape, dtype=np.float32)
+    
+    # 加载所有 pth 文件
+    pth_files = sorted(glob.glob(f"{ckpt_dir}/tile_*.pth"), 
+                       key=lambda x: int(x.split('_')[-1].split('.')[0]))
+    
+    for pth_file in pth_files:
+        ckpt = torch.load(pth_file, map_location='cpu')
+        model = Siren(IN_DIM, OUT_DIM, HIDDEN_DIM, LAYERS, W0)
+        model.load_state_dict(ckpt["state"])
+        model.eval()
+        
+        y, x = ckpt["pos"]
+        h, w = ckpt["shape"]
+        
+        coords = get_coords(h, w)
+        with torch.no_grad():
+            pred = model(coords).reshape(h, w, 3).cpu().numpy()
+        pred = (pred + 1.0) / 2.0  # 反归一化
+
+        # 边缘权重，线性平滑
+        yy = np.linspace(0,1,h)[:,None]
+        xx = np.linspace(0,1,w)[None,:]
+        w_map = np.minimum(yy, 1-yy) * np.minimum(xx,1-xx)
+        w_map = w_map[:,:,None]
+
+        recon[y:y+h, x:x+w, :] += pred * w_map
+        weight[y:y+h, x:x+w, :] += w_map
+
+    # 避免除0
+    recon = recon / np.maximum(weight, 1e-8)
+    recon_img = Image.fromarray((np.clip(recon,0,1)*255).astype(np.uint8))
+    return recon_img
 
 # tile 拼接函数（线性平滑边缘）
 def reconstruct_image(tile_models, img_shape):
+    """从内存中的模型列表重建图像"""
     h_total, w_total, _ = img_shape
     recon = np.zeros(img_shape, dtype=np.float32)
     weight = np.zeros(img_shape, dtype=np.float32)
@@ -102,6 +153,13 @@ def reconstruct_image(tile_models, img_shape):
     return recon_img
 
 # 拼接生成最终重建图
-recon_img = reconstruct_image(tile_models, img_np.shape)
-recon_img.save(os.path.join(CKPT_DIR, "reconstruction.png"))
-print("✅ Training and reconstruction finished.")
+if RECONSTRUCT_FROM_CKPT:
+    # 从保存的 pth 文件重建
+    recon_img = reconstruct_from_checkpoints(CKPT_DIR, img_np.shape)
+    recon_img.save(os.path.join(CKPT_DIR, "reconstruction.png"))
+    print("Reconstruction from checkpoints finished.")
+else:
+    # 从内存中的模型重建
+    recon_img = reconstruct_image(tile_models, img_np.shape)
+    recon_img.save(os.path.join(CKPT_DIR, "reconstruction.png"))
+    print("Training and reconstruction finished.")
