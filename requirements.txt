@@ -1,0 +1,16 @@
+# ===== Python 层基础依赖 =====
+numpy>=1.26,<2.0
+pillow>=9.5.0
+tqdm>=4.65
+matplotlib>=3.7
+
+# ===== PyTorch 相关提示 =====
+# PyTorch 和 torchvision 强烈推荐用官方 wheel 或 conda 安装
+# CPU-only 示例：
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# GPU 示例（1660Ti, CUDA 11.8）：
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+
+# ===== 可选 =====
+# opencv-python  # 如果你想用 OpenCV
+# scikit-image   # 如果需要额外图像处理
