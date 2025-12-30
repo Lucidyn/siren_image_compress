@@ -18,6 +18,7 @@ W0 = 30.0
 # 重建,超分
 UPSCALE = 2                # 1=原尺寸，2/4=超分
 CLAMP = True
+RECONSTRUCT_FROM_CKPT = False  # 是否从保存的 pth 文件重建（True=从文件，False=从内存）
 
 DEVICE = "cuda"
 SEED = 42
